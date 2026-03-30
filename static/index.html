@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prikbord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0d;
+      --surface: #13131a;
+      --surface-hover: #1a1a24;
+      --surface-raised: #1e1e28;
+      --border: #252530;
+      --border-subtle: #1c1c26;
+      --text: #e6e6f0;
+      --text-muted: #7070a0;
+      --text-dim: #484860;
+      --accent: #00d4ff;
+      --accent-hover: #33ddff;
+      --accent-dim: rgba(0, 212, 255, 0.12);
+      --accent-glow: rgba(0, 212, 255, 0.25);
+      --amber: #f5a623;
+      --amber-dim: rgba(245, 166, 35, 0.2);
+      --red: #ff4757;
+      --red-dim: rgba(255, 71, 87, 0.2);
+      --green: #a8ff3e;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100dvh;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+    /* ─── Header ──────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 13, 0.85);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.85rem 1.5rem;
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-glow);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent);
+      animation: logo-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes logo-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .logo-version {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    /* ─── Filter bar ──────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      align-items: center;
+      flex: 1;
+    }
+
+    .filter-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.45rem 2rem 0.45rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%237070a0' d='M5 6L0 1h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      min-width: 130px;
+    }
+
+    .search-input {
+      background-image: none !important;
+      padding-left: 0.75rem !important;
+      cursor: text !important;
+      min-width: 180px !important;
+    }
+
+    .search-input::-webkit-search-cancel-button { cursor: pointer; }
+
+    .filter-select:hover { border-color: var(--text-dim); background-color: var(--surface-hover); }
+    .filter-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); background-color: var(--surface-hover); }
+    .filter-select option { background: var(--surface); }
+
+    .urgency-pills {
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    .pill-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.38rem 0.7rem;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .pill-btn:hover { border-color: var(--text-dim); color: var(--text); background: var(--surface-hover); }
+    .pill-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+    .pill-btn.active.high { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+    .pill-btn.active.medium { background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
+
+    .archive-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.45rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .archive-btn:hover { border-color: var(--text-dim); color: var(--text); }
+    .archive-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    .archive-btn svg { width: 14px; height: 14px; }
+
+    /* ─── Board ──────────────────────────────── */
+    .board {
+      max-width: 1400px;
+      margin: 2.5rem auto 5rem;
+      padding: 0 1.5rem;
+    }
+
+    /* ─── Empty state ─────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 6rem 2rem;
+      animation: fade-in 0.5s var(--ease-out);
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .empty-icon svg { width: 28px; height: 28px; color: var(--text-dim); }
+
+    .empty-state h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .empty-state p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    .empty-state .kbd-hint {
+      margin-top: 1.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .kbd {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.15rem 0.45rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ─── Group ──────────────────────────────── */
+    .group {
+      margin-bottom: 3rem;
+      animation: group-in 0.5s var(--ease-out) both;
+    }
+
+    @keyframes group-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .group-header {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .group-name {
+      color: var(--text-muted);
+    }
+
+    .group-count {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dim);
+      font-size: 0.65rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 10px;
+    }
+
+    /* ─── Masonry ────────────────────────────── */
+    .masonry {
+      columns: 1;
+      column-gap: 0.85rem;
+    }
+
+    @media (min-width: 640px) { .masonry { columns: 2; } }
+    @media (min-width: 1024px) { .masonry { columns: 3; } }
+    @media (min-width: 1400px) { .masonry { columns: 4; } }
+
+    /* ─── Note Card ──────────────────────────── */
+    .note-card {
+      break-inside: avoid;
+      margin-bottom: 0.85rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition:
+        transform 0.35s var(--ease-spring),
+        box-shadow 0.35s var(--ease-out),
+        border-color 0.25s,
+        opacity 0.3s;
+      transform-origin: center top;
+      animation: card-in 0.45s var(--ease-out) both;
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(16px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .note-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background 0.3s;
+    }
+
+    .note-card:hover {
+      transform: translateY(-3px) rotate(0deg) !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      border-color: var(--border);
+    }
+
+    /* Urgency top bar */
+    .note-card.approaching::before { background: var(--amber); }
+    .note-card.imminent::before { background: var(--red); }
+    .note-card.overdue::before { background: var(--red); box-shadow: 0 0 12px var(--red); }
+
+    /* States */
+    .note-card.dormant {
+      opacity: 0.45;
+      border-color: var(--border-subtle);
+    }
+
+    .note-card.approaching {
+      border-color: rgba(245, 166, 35, 0.3);
+    }
+
+    .note-card.imminent {
+      border-color: rgba(255, 71, 87, 0.4);
+      box-shadow: 0 4px 20px rgba(255, 71, 87, 0.15);
+    }
+
+    .note-card.overdue {
+      border-color: rgba(255, 71, 87, 0.5);
+      animation: card-in 0.45s var(--ease-out) both, overdue-pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes overdue-pulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(255, 71, 87, 0.15); border-color: rgba(255, 71, 87, 0.5); }
+      50% { box-shadow: 0 4px 30px rgba(255, 71, 87, 0.35); border-color: rgba(255, 71, 87, 0.8); }
+    }
+
+    /* Urgency dot */
+    .urgency-dot {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .note-card:hover .urgency-dot { transform: scale(1.3); }
+    .urgency-dot.low { background: var(--text-dim); }
+    .urgency-dot.medium { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .urgency-dot.high { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+    /* Card content */
+    .note-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      padding-right: 1rem;
+      line-height: 1.4;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .note-description {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.65rem;
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .note-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .note-tag-pill {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .note-footer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .note-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+    }
+
+    .note-owner {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .note-group {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+    }
+
+    .note-date {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .note-date.overdue { color: var(--red); font-weight: 500; }
+    .note-date.imminent { color: var(--red); }
+    .note-date.approaching { color: var(--amber); }
+    .note-date.dormant { color: var(--text-dim); }
+
+    /* Wake progress bar */
+    .wake-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--border);
+      transition: background 0.3s, width 0.5s var(--ease-out);
+      border-radius: 0 0 0 var(--radius-md);
+    }
+
+    .note-card.approaching .wake-bar { background: var(--amber); }
+    .note-card.imminent .wake-bar { background: var(--red); }
+    .note-card.overdue .wake-bar { background: var(--red); }
+
+    /* ─── FAB ─────────────────────────────────── */
+    .fab {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      font-size: 1.6rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0, 212, 255, 0.35), 0 0 0 0 rgba(0, 212, 255, 0.4);
+      transition: transform 0.25s var(--ease-spring), box-shadow 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    .fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 28px rgba(0, 212, 255, 0.5), 0 0 0 6px rgba(0, 212, 255, 0.08);
+      background: var(--accent-hover);
+    }
+
+    .fab:active { transform: scale(0.95); }
+    .fab:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    /* ─── Modal ──────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 300;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s var(--ease-in-out);
+    }
+
+    @media (min-width: 640px) { .modal-overlay { align-items: center; } }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%;
+      max-width: 540px;
+      max-height: 92dvh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.4s var(--ease-spring), border-radius 0.3s var(--ease-out);
+      box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
+    }
+
+    @media (min-width: 640px) {
+      .modal {
+        border-radius: var(--radius-lg);
+        transform: translateY(30px) scale(0.97);
+      }
+      .modal-overlay.open .modal {
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 1;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .modal-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-icon svg { width: 16px; height: 16px; color: var(--accent); }
+
+    .modal-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .modal-close {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      line-height: 1;
+    }
+
+    .modal-close:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border); }
+
+    .modal-body { padding: 1.5rem; }
+
+    .form-group { margin-bottom: 1.1rem; }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 0.45rem;
+    }
+
+    .form-label .required { color: var(--accent); margin-left: 2px; }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      outline: none;
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+      background: var(--surface-hover);
+    }
+
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+    }
+
+    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+    /* Urgency toggle */
+    .urgency-toggle {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .urgency-toggle button {
+      flex: 1;
+      padding: 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .urgency-toggle button:hover { border-color: var(--text-dim); color: var(--text); }
+
+    .urgency-toggle button.selected.low {
+      background: rgba(112, 112, 160, 0.12);
+      border-color: var(--text-dim);
+      color: var(--text-muted);
+    }
+
+    .urgency-toggle button.selected.medium {
+      background: var(--amber-dim);
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .urgency-toggle button.selected.high {
+      background: var(--red-dim);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    /* Tag chips input */
+    .tag-input-container { position: relative; }
+
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      padding: 0.55rem 0.65rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      min-height: 42px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: text;
+      align-items: center;
+    }
+
+    .tag-chips:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.15rem 0.4rem 0.15rem 0.5rem;
+      border-radius: 5px;
+      animation: chip-pop 0.2s var(--ease-spring);
+    }
+
+    @keyframes chip-pop {
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .tag-chip-remove {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .tag-chip-remove:hover { opacity: 1; }
+
+    .tag-chip-input {
+      flex: 1;
+      min-width: 80px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      outline: none;
+      padding: 0.1rem 0;
+    }
+
+    .tag-chip-input::placeholder { color: var(--text-dim); }
+
+    .tag-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag-suggestion {
+      background: var(--surface-hover);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag-suggestion:hover { background: var(--accent-dim); color: var(--accent); border-color: rgba(0, 212, 255, 0.3); }
+
+    /* Modal footer */
+    .modal-footer {
+      display: flex;
+      gap: 0.65rem;
+      padding: 1.25rem 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+      position: sticky;
+      bottom: 0;
+      background: var(--surface);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    .btn {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn-secondary {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--text-dim); background: var(--surface-raised); }
+
+    .btn-danger {
+      background: var(--red-dim);
+      color: var(--red);
+      border-color: rgba(255, 71, 87, 0.4);
+    }
+
+    .btn-danger:hover { background: rgba(255, 71, 87, 0.25); }
+
+    .btn-resolve {
+      background: rgba(168, 255, 62, 0.08);
+      color: var(--green);
+      border-color: rgba(168, 255, 62, 0.3);
+    }
+
+    .btn-resolve:hover { background: rgba(168, 255, 62, 0.15); }
+
+    .btn svg { width: 15px; height: 15px; }
+
+    /* ─── Loading ─────────────────────────────── */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 2rem;
+      gap: 1rem;
+    }
+
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    /* ─── Toast ──────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 6rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 1.2rem;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.3s var(--ease-spring);
+      z-index: 500;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+
+    /* ─── Animations ──────────────────────────── */
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* ─── Reduced motion ──────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon"></div>
+      Prikbord
+    </div>
+    <div class="filter-bar">
+      <input id="searchInput" class="filter-select search-input" type="search" placeholder="Search title or owner…" aria-label="Search notes">
+      <select id="groupFilter" class="filter-select" aria-label="Filter by group">
+        <option value="">All groups</option>
+      </select>
+      <select id="tagFilter" class="filter-select" aria-label="Filter by tag">
+        <option value="">All tags</option>
+      </select>
+      <div class="urgency-pills">
+        <button class="pill-btn active" data-urgency="" aria-pressed="true">All</button>
+        <button class="pill-btn" data-urgency="low" aria-pressed="false">Low</button>
+        <button class="pill-btn" data-urgency="medium" aria-pressed="false">Med</button>
+        <button class="pill-btn" data-urgency="high" aria-pressed="false">High</button>
+      </div>
+      <button class="pill-btn" id="imminentFilter" aria-pressed="false">Imminent+</button>
+    </div>
+    <button class="archive-btn" id="archiveToggle" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+      Archive
+    </button>
+  </div>
+</header>
+
+<main class="board" id="board" role="main">
+  <div class="loading" aria-live="polite">
+    <div class="loading-spinner"></div>
+    <span class="loading-text">Loading board...</span>
+  </div>
+</main>
+
+<button class="fab" id="fab" title="Add note (n)" aria-label="Add new note">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+</button>
+
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon" id="modalIcon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </div>
+        <span class="modal-title" id="modalTitle">Add Note</span>
+      </div>
+      <button class="modal-close" id="modalClose" aria-label="Close modal">&times;</button>
+    </div>
+    <form id="noteForm" novalidate>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="noteTitle">Title <span class="required">*</span></label>
+          <input class="form-input" id="noteTitle" type="text" placeholder="What needs attention?" maxlength="80" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="noteDescription">Description</label>
+          <textarea class="form-textarea" id="noteDescription" placeholder="Optional details, context, links..." maxlength="300"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="noteOwner">Owner <span class="required">*</span></label>
+            <input class="form-input" id="noteOwner" type="text" placeholder="Your name" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="noteGroup">Group <span class="required">*</span></label>
+            <input class="form-input" id="noteGroup" type="text" placeholder="e.g. Telia, Sprint 3" list="groupList" required autocomplete="off">
+            <datalist id="groupList"></datalist>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="noteWakeDate">Wake Date <span class="required">*</span></label>
+            <input class="form-input" id="noteWakeDate" type="date" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Urgency</label>
+            <div class="urgency-toggle" id="urgencyToggle" role="group" aria-label="Urgency level">
+              <button type="button" class="selected" data-value="low">Low</button>
+              <button type="button" data-value="medium">Med</button>
+              <button type="button" data-value="high">High</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags</label>
+          <div class="tag-input-container">
+            <div class="tag-chips" id="tagChips" role="group" aria-label="Tags">
+              <input class="tag-chip-input" id="tagInput" type="text" placeholder="Add tags — press Enter or comma" autocomplete="off" aria-label="Add a tag">
+            </div>
+            <div class="tag-suggestions" id="tagSuggestions"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Note
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // ─── State ───────────────────────────────────
+  let notes = [];
+  let groups = [];
+  let allTags = [];
+  let showArchive = false;
+  let activeGroup = '';
+  let activeTag = '';
+  let activeUrgency = '';
+  let showImminentOnly = false;
+  let searchQuery = '';
+  let editingId = null;
+  let currentTags = [];
+  let toastTimer = null;
+
+  // ─── DOM refs ────────────────────────────────
+  const board = document.getElementById('board');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const noteForm = document.getElementById('noteForm');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalIcon = document.getElementById('modalIcon');
+  const submitBtn = document.getElementById('submitBtn');
+  const fab = document.getElementById('fab');
+  const groupFilter = document.getElementById('groupFilter');
+  const tagFilter = document.getElementById('tagFilter');
+  const archiveToggle = document.getElementById('archiveToggle');
+  const toast = document.getElementById('toast');
+  const tagChips = document.getElementById('tagChips');
+  const tagInput = document.getElementById('tagInput');
+  const tagSuggestions = document.getElementById('tagSuggestions');
+
+  // ─── Proximity ────────────────────────────────
+  function getProximity(wakeDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const wake = new Date(wakeDate);
+    wake.setHours(0, 0, 0, 0);
+    const days = Math.ceil((wake - today) / 86400000);
+    if (days < 0) return { state: 'overdue', days };
+    if (days <= 7) return { state: 'imminent', days };
+    if (days <= 30) return { state: 'approaching', days };
+    return { state: 'dormant', days };
+  }
+
+  function sortProximity(a, b) {
+    const order = { overdue: 0, imminent: 1, approaching: 2, dormant: 3 };
+    const pa = getProximity(a.wake_date);
+    const pb = getProximity(b.wake_date);
+    if (order[pa.state] !== order[pb.state]) return order[pa.state] - order[pb.state];
+    return new Date(a.wake_date) - new Date(b.wake_date);
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function daysLabel(prox) {
+    if (prox.state === 'overdue') return `Overdue ${Math.abs(prox.days)}d`;
+    if (prox.state === 'imminent') return prox.days === 0 ? 'Today' : `In ${prox.days}d`;
+    if (prox.state === 'approaching') return `In ${prox.days}d`;
+    return formatDate(new Date(Date.now() + prox.days * 86400000).toISOString());
+  }
+
+  // ─── Utils ───────────────────────────────────
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg, icon = true) {
+    toast.innerHTML = icon
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>${escapeHtml(msg)}`
+      : escapeHtml(msg);
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+
+  function randomRotation() {
+    return (Math.random() - 0.5) * 2.4;
+  }
+
+  // ─── Render ──────────────────────────────────
+  function renderNoteCard(note, index) {
+    const prox = getProximity(note.wake_date);
+    const dateClass = prox.state;
+    const tags = note.tags || [];
+    const tagsHtml = tags.length
+      ? `<div class="note-tags">${tags.map(t => `<span class="note-tag-pill">${escapeHtml(t)}</span>`).join('')}</div>`
+      : '';
+
+    // Calculate wake bar width (100% = 30 days)
+    let wakeBarWidth = '0%';
+    if (prox.state === 'approaching') wakeBarWidth = Math.min(100, ((30 - prox.days) / 30) * 100) + '%';
+    else if (prox.state === 'imminent') wakeBarWidth = Math.min(100, ((7 - prox.days) / 7) * 100) + '%';
+    else if (prox.state === 'overdue') wakeBarWidth = '100%';
+
+    return `
+      <div class="note-card ${prox.state}" data-id="${note.id}" style="transform: rotate(${randomRotation()}deg); animation-delay: ${index * 40}ms">
+        <div class="urgency-dot ${note.urgency}"></div>
+        <div class="note-title">${escapeHtml(note.title)}</div>
+        ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
+        ${tagsHtml}
+        <div class="note-footer">
+          <div class="note-meta">
+            <span class="note-owner">${escapeHtml(note.owner)}</span>
+            ${note.group_tag ? `<span class="note-group">${escapeHtml(note.group_tag)}</span>` : ''}
+          </div>
+          <div>
+            <div class="note-date ${dateClass}">${daysLabel(prox)}</div>
+          </div>
+        </div>
+        ${wakeBarWidth !== '0%' ? `<div class="wake-bar" style="width: ${wakeBarWidth}"></div>` : ''}
+      </div>
+    `;
+  }
+
+  function render() {
+    if (notes.length === 0) {
+      board.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            </svg>
+          </div>
+          <h2>${showArchive ? 'No archived notes' : 'Your board is empty'}</h2>
+          <p>${showArchive ? 'Resolved notes appear here.' : 'Notes surface when their wake date approaches. Add your first one.'}</p>
+          ${!showArchive ? `<div class="kbd-hint"><span class="kbd">N</span> to add a note</div>` : ''}
+        </div>`;
+      return;
+    }
+
+    let filtered = notes.filter(n => showArchive ? n.resolved : !n.resolved);
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(n =>
+        n.title.toLowerCase().includes(q) ||
+        n.owner.toLowerCase().includes(q)
+      );
+    }
+
+    if (activeGroup) filtered = filtered.filter(n => n.group_tag === activeGroup);
+    if (activeTag) filtered = filtered.filter(n => (n.tags || []).includes(activeTag));
+    if (activeUrgency) filtered = filtered.filter(n => n.urgency === activeUrgency);
+    if (showImminentOnly) {
+      filtered = filtered.filter(n => {
+        const p = getProximity(n.wake_date);
+        return p.state === 'imminent' || p.state === 'overdue';
+      });
+    }
+
+    if (filtered.length === 0) {
+      board.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <h2>No notes match</h2>
+          <p>Try adjusting your filters to find what you're looking for.</p>
+        </div>`;
+      return;
+    }
+
+    // Group by group_tag
+    const groups_map = {};
+    filtered.forEach(note => {
+      const key = note.group_tag || '(no group)';
+      (groups_map[key] || (groups_map[key] = [])).push(note);
+    });
+
+    // Sort groups by most imminent note
+    const sortedGroups = Object.entries(groups_map).sort(([, a], [, b]) => {
+      const aNote = a.find(n => getProximity(n.wake_date).state !== 'dormant') || a[0];
+      const bNote = b.find(n => getProximity(n.wake_date).state !== 'dormant') || b[0];
+      return sortProximity(aNote, bNote);
+    });
+
+    Object.values(groups_map).forEach(g => g.sort(sortProximity));
+
+    let cardIndex = 0;
+    board.innerHTML = sortedGroups.map(([group, groupNotes]) => `
+      <div class="group" style="animation-delay: ${cardIndex * 60}ms">
+        <div class="group-header">
+          <span class="group-name">${escapeHtml(group)}</span>
+          <span class="group-count">${groupNotes.length}</span>
+        </div>
+        <div class="masonry">
+          ${groupNotes.map(note => renderNoteCard(note, cardIndex++)).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    board.querySelectorAll('.note-card').forEach(card => {
+      card.addEventListener('click', () => openEditModal(card.dataset.id));
+    });
+  }
+
+  // ─── Tags ────────────────────────────────────
+  function setTags(tags) {
+    currentTags = tags;
+    tagChips.querySelectorAll('.tag-chip').forEach(c => c.remove());
+    currentTags.forEach(tag => {
+      const chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      chip.innerHTML = `${escapeHtml(tag)}<button type="button" class="tag-chip-remove" data-tag="${escapeHtml(tag)}" aria-label="Remove tag ${escapeHtml(tag)}">&times;</button>`;
+      tagChips.insertBefore(chip, tagInput);
+    });
+  }
+
+  function addTag(tag) {
+    tag = tag.trim().toLowerCase().replace(/,/g, '');
+    if (tag && !currentTags.includes(tag)) setTags([...currentTags, tag]);
+    tagInput.value = '';
+    renderTagSuggestions();
+  }
+
+  function removeTag(tag) { setTags(currentTags.filter(t => t !== tag)); }
+
+  function renderTagSuggestions() {
+    const query = tagInput.value.toLowerCase().trim();
+    const available = allTags.filter(t => !currentTags.includes(t) && (!query || t.toLowerCase().includes(query)));
+    tagSuggestions.innerHTML = available.slice(0, 8).map(t =>
+      `<button type="button" class="tag-suggestion" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+    ).join('');
+  }
+
+  // ─── Modal ───────────────────────────────────
+  function openModal() {
+    modalOverlay.classList.add('open');
+    document.getElementById('noteTitle').focus();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('open');
+    noteForm.reset();
+    editingId = null;
+    setTags([]);
+    document.body.style.overflow = '';
+
+    // Reset read-only states
+    document.getElementById('noteTitle').readOnly = false;
+    document.getElementById('noteDescription').readOnly = false;
+    document.getElementById('noteOwner').readOnly = false;
+    document.getElementById('noteGroup').readOnly = false;
+    document.getElementById('noteWakeDate').readOnly = false;
+    document.getElementById('urgencyToggle').style.display = '';
+    document.getElementById('tagChips').style.display = '';
+    document.getElementById('tagSuggestions').style.display = '';
+    submitBtn.style.display = '';
+
+    const resolveBtn = document.getElementById('resolveBtn');
+    if (resolveBtn) resolveBtn.remove();
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (restoreBtn) restoreBtn.style.display = 'none';
+    const deleteBtn = document.getElementById('deleteBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+  }
+
+  const addIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+  const editIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+
+  function openAddModal() {
+    editingId = null;
+    modalTitle.textContent = 'Add Note';
+    modalIcon.innerHTML = addIcon;
+    submitBtn.style.display = '';
+    submitBtn.innerHTML = `${addIcon} Add Note`;
+    submitBtn.className = 'btn btn-primary';
+    setUrgency('low');
+
+    // Reset read-only states
+    document.getElementById('noteTitle').readOnly = false;
+    document.getElementById('noteDescription').readOnly = false;
+    document.getElementById('noteOwner').readOnly = false;
+    document.getElementById('noteGroup').readOnly = false;
+    document.getElementById('noteWakeDate').readOnly = false;
+    document.getElementById('urgencyToggle').style.display = '';
+    document.getElementById('tagChips').style.display = '';
+    document.getElementById('tagSuggestions').style.display = '';
+
+    const resolveBtn = document.getElementById('resolveBtn');
+    if (resolveBtn) resolveBtn.remove();
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (restoreBtn) restoreBtn.style.display = 'none';
+    const deleteBtn = document.getElementById('deleteBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    noteForm.reset();
+    setTags([]);
+    openModal();
+  }
+
+  async function openEditModal(id) {
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+
+    editingId = id;
+    const isArchived = !!note.resolved;
+
+    // For archived notes: read-only modal with Restore + Delete
+    if (isArchived) {
+      modalTitle.textContent = 'Archived Note';
+      modalIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>`;
+
+      // Show read-only content in form
+      document.getElementById('noteTitle').value = note.title;
+      document.getElementById('noteDescription').value = note.description || '';
+      document.getElementById('noteOwner').value = note.owner;
+      document.getElementById('noteGroup').value = note.group_tag;
+      document.getElementById('noteWakeDate').value = note.wake_date;
+      setUrgency(note.urgency);
+      setTags(note.tags || []);
+
+      // Disable all inputs
+      document.getElementById('noteTitle').readOnly = true;
+      document.getElementById('noteDescription').readOnly = true;
+      document.getElementById('noteOwner').readOnly = true;
+      document.getElementById('noteGroup').readOnly = true;
+      document.getElementById('noteWakeDate').readOnly = true;
+      document.getElementById('urgencyToggle').style.display = 'none';
+      document.getElementById('tagChips').style.display = 'none';
+      document.getElementById('tagSuggestions').style.display = 'none';
+
+      submitBtn.style.display = 'none';
+
+      // Restore button
+      let restoreBtn = document.getElementById('restoreBtn');
+      if (!restoreBtn) {
+        restoreBtn = document.createElement('button');
+        restoreBtn.type = 'button';
+        restoreBtn.id = 'restoreBtn';
+        restoreBtn.className = 'btn btn-resolve';
+        restoreBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-4.5"></path></svg> Restore`;
+        restoreBtn.style.cssText = 'flex:1';
+        restoreBtn.addEventListener('click', async () => {
+          await unresolveNote(id);
+          closeModal();
+        });
+        document.querySelector('.modal-footer').appendChild(restoreBtn);
+      } else {
+        restoreBtn.style.display = '';
+      }
+
+      // Delete button
+      let deleteBtn = document.getElementById('deleteBtn');
+      if (!deleteBtn) {
+        deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.id = 'deleteBtn';
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg> Delete`;
+        deleteBtn.style.cssText = 'flex:1';
+        deleteBtn.addEventListener('click', async () => {
+          await deleteNote(id);
+          closeModal();
+        });
+        document.querySelector('.modal-footer').appendChild(deleteBtn);
+      } else {
+        deleteBtn.style.display = '';
+      }
+
+      openModal();
+      return;
+    }
+
+    // Active note: full edit modal
+    document.getElementById('noteTitle').readOnly = false;
+    document.getElementById('noteDescription').readOnly = false;
+    document.getElementById('noteOwner').readOnly = false;
+    document.getElementById('noteGroup').readOnly = false;
+    document.getElementById('noteWakeDate').readOnly = false;
+    document.getElementById('urgencyToggle').style.display = '';
+    document.getElementById('tagChips').style.display = '';
+    document.getElementById('tagSuggestions').style.display = '';
+
+    modalTitle.textContent = 'Edit Note';
+    modalIcon.innerHTML = editIcon;
+    submitBtn.style.display = '';
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Changes`;
+    submitBtn.className = 'btn btn-primary';
+
+    document.getElementById('noteTitle').value = note.title;
+    document.getElementById('noteDescription').value = note.description || '';
+    document.getElementById('noteOwner').value = note.owner;
+    document.getElementById('noteGroup').value = note.group_tag;
+    document.getElementById('noteWakeDate').value = note.wake_date;
+    setUrgency(note.urgency);
+    setTags(note.tags || []);
+
+    // Remove archived-only buttons
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (restoreBtn) restoreBtn.style.display = 'none';
+    const deleteBtn = document.getElementById('deleteBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+
+    let resolveBtn = document.getElementById('resolveBtn');
+    if (!resolveBtn) {
+      resolveBtn = document.createElement('button');
+      resolveBtn.type = 'button';
+      resolveBtn.id = 'resolveBtn';
+      resolveBtn.className = 'btn btn-resolve';
+      resolveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolve`;
+      resolveBtn.style.cssText = 'flex:0 0 auto;width:auto;padding:0.7rem 0.9rem';
+      document.querySelector('.modal-footer').prepend(resolveBtn);
+      resolveBtn.addEventListener('click', async () => {
+        await resolveNote(id);
+        closeModal();
+      });
+    }
+    resolveBtn.style.display = '';
+    resolveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolve`;
+    resolveBtn.className = 'btn btn-resolve';
+
+    openModal();
+  }
+
+  function setUrgency(value) {
+    document.querySelectorAll('#urgencyToggle button').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.value === value);
+      btn.setAttribute('aria-pressed', btn.dataset.value === value ? 'true' : 'false');
+    });
+    document.getElementById('urgencyToggle').dataset.value = value;
+  }
+
+  // ─── API ────────────────────────────────────
+  async function fetchNotes() {
+    try {
+      const [activeRes, resolvedRes] = await Promise.all([
+        fetch('/api/notes'),
+        fetch('/api/notes/resolved')
+      ]);
+      const active = await activeRes.json();
+      const resolved = await resolvedRes.json();
+      notes = [...active, ...resolved];
+      render();
+    } catch {
+      board.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          </div>
+          <h2>Connection failed</h2>
+          <p>Could not reach the server. Is it running?</p>
+        </div>`;
+    }
+  }
+
+  async function fetchGroupsAndTags() {
+    try {
+      const [groupsRes, tagsRes] = await Promise.all([
+        fetch('/api/groups'),
+        fetch('/api/tags')
+      ]);
+      groups = await groupsRes.json();
+      allTags = await tagsRes.json();
+
+      groupFilter.innerHTML = '<option value="">All groups</option>' + groups.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+      document.getElementById('groupList').innerHTML = groups.map(g => `<option value="${escapeHtml(g)}">`).join('');
+
+      tagFilter.innerHTML = '<option value="">All tags</option>' + allTags.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+
+      renderTagSuggestions();
+    } catch { /* silent */ }
+  }
+
+  async function resolveNote(id) {
+    await fetch(`/api/notes/${id}/resolve`, { method: 'POST' });
+    await fetchNotes();
+    await fetchGroupsAndTags();
+    showToast('Note resolved');
+  }
+
+  async function unresolveNote(id) {
+    await fetch(`/api/notes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resolved: false })
+    });
+    await fetchNotes();
+    await fetchGroupsAndTags();
+    showToast('Note restored');
+  }
+
+  async function deleteNote(id) {
+    if (!confirm('Delete this note permanently?')) return;
+    await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+    await fetchNotes();
+    await fetchGroupsAndTags();
+    showToast('Note deleted');
+  }
+
+  // ─── Form submit ──────────────────────────────
+  noteForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // Guard: submit is hidden for archived notes
+    if (submitBtn.style.display === 'none') return;
+    const titleVal = document.getElementById('noteTitle').value.trim();
+    if (!titleVal) {
+      document.getElementById('noteTitle').focus();
+      return;
+    }
+
+    const data = {
+      title: titleVal,
+      description: document.getElementById('noteDescription').value.trim() || null,
+      owner: document.getElementById('noteOwner').value.trim(),
+      group_tag: document.getElementById('noteGroup').value.trim(),
+      wake_date: document.getElementById('noteWakeDate').value,
+      urgency: document.getElementById('urgencyToggle').dataset.value,
+      tags: currentTags
+    };
+
+    try {
+      if (editingId) {
+        const res = await fetch(`/api/notes/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error();
+        showToast('Changes saved');
+      } else {
+        const res = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error();
+        showToast('Note added');
+      }
+      closeModal();
+      await fetchNotes();
+      await fetchGroupsAndTags();
+    } catch {
+      showToast('Something went wrong', false);
+    }
+  });
+
+  // ─── Tag input events ─────────────────────────
+  tagInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = tagInput.value.replace(',', '').trim();
+      if (val) addTag(val);
+    } else if (e.key === 'Backspace' && !tagInput.value && currentTags.length > 0) {
+      removeTag(currentTags[currentTags.length - 1]);
+    }
+  });
+
+  tagInput.addEventListener('input', renderTagSuggestions);
+
+  tagChips.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tag-chip-remove')) removeTag(e.target.dataset.tag);
+    else tagInput.focus();
+  });
+
+  tagSuggestions.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tag-suggestion')) addTag(e.target.dataset.tag);
+  });
+
+  // ─── Filter events ───────────────────────────
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    searchQuery = e.target.value.trim();
+    render();
+  });
+
+  groupFilter.addEventListener('change', (e) => { activeGroup = e.target.value; render(); });
+  tagFilter.addEventListener('change', (e) => { activeTag = e.target.value; render(); });
+
+  document.querySelectorAll('.urgency-pills .pill-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.urgency-pills .pill-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      activeUrgency = btn.dataset.urgency;
+      render();
+    });
+  });
+
+  document.getElementById('imminentFilter').addEventListener('click', (e) => {
+    showImminentOnly = !showImminentOnly;
+    e.target.classList.toggle('active', showImminentOnly);
+    e.target.setAttribute('aria-pressed', showImminentOnly ? 'true' : 'false');
+    render();
+  });
+
+  archiveToggle.addEventListener('click', () => {
+    showArchive = !showArchive;
+    archiveToggle.classList.toggle('active', showArchive);
+    archiveToggle.setAttribute('aria-pressed', showArchive ? 'true' : 'false');
+    archiveToggle.childNodes[2].textContent = showArchive ? ' Board' : ' Archive';
+    render();
+  });
+
+  // ─── Modal events ────────────────────────────
+  fab.addEventListener('click', openAddModal);
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+  document.querySelectorAll('#urgencyToggle button').forEach(btn => {
+    btn.addEventListener('click', () => setUrgency(btn.dataset.value));
+  });
+
+  // ─── Keyboard shortcuts ──────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
+      closeModal();
+    }
+    if (e.key === 'n' && !modalOverlay.classList.contains('open') &&
+        e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
+      e.preventDefault();
+      openAddModal();
+    }
+  });
+
+  // ─── Init ────────────────────────────────────
+  fetchNotes();
+  fetchGroupsAndTags();
+</script>
+
+</body>
+</html>
