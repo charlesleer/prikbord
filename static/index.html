@@ -1703,7 +1703,8 @@
         restoreBtn.className = 'btn btn-resolve';
         restoreBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-4.5"></path></svg> Restore`;
         restoreBtn.style.cssText = 'flex:1';
-        restoreBtn.addEventListener('click', async () => {
+        restoreBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
           await unresolveNote(id);
           closeModal();
         });
@@ -1721,7 +1722,8 @@
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg> Delete`;
         deleteBtn.style.cssText = 'flex:1';
-        deleteBtn.addEventListener('click', async () => {
+        deleteBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
           await deleteNote(id);
           closeModal();
         });
@@ -1767,23 +1769,21 @@
     const deleteBtn = document.getElementById('deleteBtn');
     if (deleteBtn) deleteBtn.style.display = 'none';
 
-    let resolveBtn = document.getElementById('resolveBtn');
-    if (!resolveBtn) {
-      resolveBtn = document.createElement('button');
-      resolveBtn.type = 'button';
-      resolveBtn.id = 'resolveBtn';
-      resolveBtn.className = 'btn btn-resolve';
-      resolveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolve`;
-      resolveBtn.style.cssText = 'flex:0 0 auto;width:auto;padding:0.7rem 0.9rem';
-      document.querySelector('.modal-footer').prepend(resolveBtn);
-      resolveBtn.addEventListener('click', async () => {
-        await resolveNote(id);
-        closeModal();
-      });
-    }
-    resolveBtn.style.display = '';
-    resolveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolve`;
+    // Always recreate resolveBtn to capture correct `id` in closure
+    const oldResolveBtn = document.getElementById('resolveBtn');
+    if (oldResolveBtn) oldResolveBtn.remove();
+    const resolveBtn = document.createElement('button');
+    resolveBtn.type = 'button';
+    resolveBtn.id = 'resolveBtn';
     resolveBtn.className = 'btn btn-resolve';
+    resolveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolve`;
+    resolveBtn.style.cssText = 'flex:0 0 auto;width:auto;padding:0.7rem 0.9rem';
+    resolveBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await resolveNote(id);
+      closeModal();
+    });
+    document.querySelector('.modal-footer').prepend(resolveBtn);
 
     openModal();
   }
