@@ -390,6 +390,41 @@
       border-color: var(--border);
     }
 
+    .note-card:hover .card-actions { opacity: 1; }
+
+    .card-actions {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      display: flex;
+      gap: 0.3rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .card-action {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .card-action svg { width: 13px; height: 13px; display: block; }
+
+    .card-action.resolve:hover { color: var(--green); border-color: rgba(168, 255, 62, 0.4); background: rgba(168, 255, 62, 0.08); }
+    .card-action.delete:hover { color: var(--red); border-color: rgba(255, 71, 87, 0.4); background: var(--red-dim); }
+
+    /* note-card needs position: relative for absolute children */
+    .note-card { position: relative; }
+
     /* Urgency top bar */
     .note-card.approaching::before { background: var(--amber); }
     .note-card.imminent::before { background: var(--red); }
@@ -1426,8 +1461,22 @@
       ? ''
       : `<div><div class="note-date ${dateClass}">${daysLabel(prox)}</div></div>`;
 
+    const actionsHtml = `
+      <div class="card-actions">
+        <button class="card-action resolve" data-id="${note.id}" title="${note.resolved ? 'Restore' : 'Resolve'}" aria-label="${note.resolved ? 'Restore' : 'Mark as done'}">
+          ${note.resolved
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-4.5"></path></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'}
+        </button>
+        <button class="card-action delete" data-id="${note.id}" title="Delete" aria-label="Delete note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+        </button>
+      </div>
+    `;
+
     return `
       <div class="note-card ${prox.state}${isNote ? ' draggable-note' : ''}" data-id="${note.id}"${isNote ? ' draggable="true"' : ''} style="transform: rotate(${randomRotation()}deg); animation-delay: ${index * 40}ms">
+        ${actionsHtml}
         <div class="urgency-dot ${note.urgency}"></div>
         <div class="note-title">${escapeHtml(note.title)}</div>
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
@@ -1546,7 +1595,33 @@
     board.innerHTML = notesSectionHtml + scheduledSectionsHtml;
 
     board.querySelectorAll('.note-card').forEach(card => {
-      card.addEventListener('click', () => openEditModal(card.dataset.id));
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.card-action')) return;
+        openEditModal(card.dataset.id);
+      });
+    });
+
+    board.querySelectorAll('.card-action.resolve').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const note = notes.find(n => n.id === id);
+        if (!note) return;
+        if (note.resolved) {
+          await unresolveNote(id);
+        } else {
+          await resolveNote(id);
+        }
+        await fetchNotes();
+        await fetchGroupsAndTags();
+      });
+    });
+
+    board.querySelectorAll('.card-action.delete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await deleteNote(btn.dataset.id);
+      });
     });
 
     // Attach drag handlers to notes (free-floating)
