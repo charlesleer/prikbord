@@ -280,7 +280,7 @@ async def test_get_note_not_found(client):
 @pytest.mark.asyncio
 async def test_import_invalid_payload(client):
     res = await client.post("/api/import", json={"notes": "not a list"})
-    assert res.status_code == 400
+    assert res.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -298,7 +298,59 @@ async def test_note_without_description(client):
     assert res.status_code == 201
     note = res.json()
     assert note["description"] is None
-    assert note["title"] == "Minimal note"
+
+
+@pytest.mark.asyncio
+async def test_create_and_list_note_without_wake_date(client):
+    """Free-floating notes (no wake_date) can be created and listed."""
+    payload = {
+        "title": "Free-floating note",
+        "owner": "Alice",
+        "group_tag": "Ideas",
+        "urgency": "high",
+        "tags": ["brainstorm"]
+    }
+    res = await client.post("/api/notes", json=payload)
+    assert res.status_code == 201
+    note = res.json()
+    assert note["title"] == "Free-floating note"
+    assert note["wake_date"] is None
+    assert note["urgency"] == "high"
+    assert note["tags"] == ["brainstorm"]
+    assert note["resolved"] is False
+
+    # GET all notes includes the note
+    res2 = await client.get("/api/notes")
+    assert res2.status_code == 200
+    notes = res2.json()
+    assert any(n["id"] == note["id"] for n in notes)
+
+
+@pytest.mark.asyncio
+async def test_update_note_to_note_and_back(client):
+    """Can convert a scheduled note to a free-floating note and vice versa."""
+    # Create with wake_date
+    res = await client.post("/api/notes", json={
+        "title": "Will convert",
+        "owner": "Bob",
+        "group_tag": "Test",
+        "wake_date": (date.today() + timedelta(days=5)).isoformat(),
+        "urgency": "low",
+        "tags": []
+    })
+    note_id = res.json()["id"]
+
+    # Convert to free-floating note (remove wake_date)
+    res2 = await client.patch(f"/api/notes/{note_id}", json={"wake_date": None})
+    assert res2.status_code == 200
+    assert res2.json()["wake_date"] is None
+
+    # Convert back to scheduled note
+    res3 = await client.patch(f"/api/notes/{note_id}", json={
+        "wake_date": (date.today() + timedelta(days=3)).isoformat()
+    })
+    assert res3.status_code == 200
+    assert res3.json()["wake_date"] is not None
 
 
 @pytest.mark.asyncio

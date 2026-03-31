@@ -13,9 +13,9 @@ class Urgency(str, Enum):
 class NoteBase(BaseModel):
     title: str = Field(..., max_length=80)
     description: Optional[str] = Field(None, max_length=300)
-    owner: str
-    group_tag: str
-    wake_date: date
+    owner: str = Field(..., max_length=100)
+    group_tag: str = Field(..., max_length=100)
+    wake_date: Optional[date] = None
     urgency: Urgency = Urgency.low
     tags: List[str] = Field(default_factory=list)
 
@@ -27,8 +27,8 @@ class NoteCreate(NoteBase):
 class NoteUpdate(BaseModel):
     title: Optional[str] = Field(None, max_length=80)
     description: Optional[str] = Field(None, max_length=300)
-    owner: Optional[str] = None
-    group_tag: Optional[str] = None
+    owner: Optional[str] = Field(None, max_length=100)
+    group_tag: Optional[str] = Field(None, max_length=100)
     wake_date: Optional[date] = None
     urgency: Optional[Urgency] = None
     resolved: Optional[bool] = None
@@ -43,3 +43,18 @@ class NoteOut(NoteBase):
 
     class Config:
         from_attributes = True
+
+
+class ImportNoteItem(BaseModel):
+    title: str = Field(..., max_length=80)
+    description: Optional[str] = Field(None, max_length=300)
+    owner: str = Field(..., max_length=100)
+    group_tag: str = Field(..., max_length=100)
+    wake_date: str
+    urgency: Urgency = Urgency.low
+    tags: List[str] = Field(default_factory=list)
+    resolved: bool = False
+
+
+class ImportPayload(BaseModel):
+    notes: List[ImportNoteItem]

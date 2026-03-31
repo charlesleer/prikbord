@@ -739,6 +739,25 @@
       color: var(--red);
     }
 
+    .note-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .note-toggle-label input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
     /* Tag chips input */
     .tag-input-container { position: relative; }
 
@@ -1048,15 +1067,19 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="noteWakeDate">Wake Date <span class="required">*</span></label>
-            <input class="form-input" id="noteWakeDate" type="date" required>
+            <label class="form-label" for="noteWakeDate">Wake Date</label>
+            <input class="form-input" id="noteWakeDate" type="date">
+            <label class="note-toggle-label">
+              <input type="checkbox" id="noteToggle">
+              <span>No date — free-floating note</span>
+            </label>
           </div>
           <div class="form-group">
             <label class="form-label">Urgency</label>
             <div class="urgency-toggle" id="urgencyToggle" role="group" aria-label="Urgency level">
-              <button type="button" class="selected" data-value="low">Low</button>
-              <button type="button" data-value="medium">Med</button>
-              <button type="button" data-value="high">High</button>
+              <button type="button" class="selected low" data-value="low">Low</button>
+              <button type="button" class="medium" data-value="medium">Med</button>
+              <button type="button" class="high" data-value="high">High</button>
             </div>
           </div>
         </div>
@@ -1116,6 +1139,7 @@
 
   // ─── Proximity ────────────────────────────────
   function getProximity(wakeDate) {
+    if (!wakeDate) return { state: 'note', days: 0 };
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const wake = new Date(wakeDate);
@@ -1128,10 +1152,12 @@
   }
 
   function sortProximity(a, b) {
-    const order = { overdue: 0, imminent: 1, approaching: 2, dormant: 3 };
+    const order = { overdue: 0, imminent: 1, approaching: 2, dormant: 3, note: 1 };
     const pa = getProximity(a.wake_date);
     const pb = getProximity(b.wake_date);
     if (order[pa.state] !== order[pb.state]) return order[pa.state] - order[pb.state];
+    if (!a.wake_date) return -1;
+    if (!b.wake_date) return 1;
     return new Date(a.wake_date) - new Date(b.wake_date);
   }
 
@@ -1141,6 +1167,7 @@
   }
 
   function daysLabel(prox) {
+    if (prox.state === 'note') return 'Anytime';
     if (prox.state === 'overdue') return `Overdue ${Math.abs(prox.days)}d`;
     if (prox.state === 'imminent') return prox.days === 0 ? 'Today' : `In ${prox.days}d`;
     if (prox.state === 'approaching') return `In ${prox.days}d`;
@@ -1167,7 +1194,7 @@
   }
 
   // ─── Render ──────────────────────────────────
-  function renderNoteCard(note, index) {
+  function renderNoteCard(note, index, isNote = false) {
     const prox = getProximity(note.wake_date);
     const dateClass = prox.state;
     const tags = note.tags || [];
@@ -1181,6 +1208,10 @@
     else if (prox.state === 'imminent') wakeBarWidth = Math.min(100, ((7 - prox.days) / 7) * 100) + '%';
     else if (prox.state === 'overdue') wakeBarWidth = '100%';
 
+    const dateBadge = isNote
+      ? ''
+      : `<div><div class="note-date ${dateClass}">${daysLabel(prox)}</div></div>`;
+
     return `
       <div class="note-card ${prox.state}" data-id="${note.id}" style="transform: rotate(${randomRotation()}deg); animation-delay: ${index * 40}ms">
         <div class="urgency-dot ${note.urgency}"></div>
@@ -1192,11 +1223,9 @@
             <span class="note-owner">${escapeHtml(note.owner)}</span>
             ${note.group_tag ? `<span class="note-group">${escapeHtml(note.group_tag)}</span>` : ''}
           </div>
-          <div>
-            <div class="note-date ${dateClass}">${daysLabel(prox)}</div>
-          </div>
+          ${dateBadge}
         </div>
-        ${wakeBarWidth !== '0%' ? `<div class="wake-bar" style="width: ${wakeBarWidth}"></div>` : ''}
+        ${wakeBarWidth !== '0%' && !isNote ? `<div class="wake-bar" style="width: ${wakeBarWidth}"></div>` : ''}
       </div>
     `;
   }
@@ -1214,7 +1243,7 @@
             </svg>
           </div>
           <h2>${showArchive ? 'No archived notes' : 'Your board is empty'}</h2>
-          <p>${showArchive ? 'Resolved notes appear here.' : 'Notes surface when their wake date approaches. Add your first one.'}</p>
+          <p>${showArchive ? 'Resolved notes appear here.' : 'Add a scheduled note with a wake date, or a free-floating Note.'}</p>
           ${!showArchive ? `<div class="kbd-hint"><span class="kbd">N</span> to add a note</div>` : ''}
         </div>`;
       return;
@@ -1236,7 +1265,7 @@
     if (showImminentOnly) {
       filtered = filtered.filter(n => {
         const p = getProximity(n.wake_date);
-        return p.state === 'imminent' || p.state === 'overdue';
+        return p.state === 'imminent' || p.state === 'overdue' || p.state === 'note';
       });
     }
 
@@ -1255,9 +1284,13 @@
       return;
     }
 
-    // Group by group_tag
+    // Separate notes (no wake_date) from scheduled notes
+    const noteNotes = filtered.filter(n => !n.wake_date);
+    const scheduledNotes = filtered.filter(n => n.wake_date);
+
+    // Group scheduled notes by group_tag
     const groups_map = {};
-    filtered.forEach(note => {
+    scheduledNotes.forEach(note => {
       const key = note.group_tag || '(no group)';
       (groups_map[key] || (groups_map[key] = [])).push(note);
     });
@@ -1272,7 +1305,19 @@
     Object.values(groups_map).forEach(g => g.sort(sortProximity));
 
     let cardIndex = 0;
-    board.innerHTML = sortedGroups.map(([group, groupNotes]) => `
+    const notesSectionHtml = noteNotes.length > 0 ? `
+      <div class="group" style="animation-delay: ${cardIndex * 60}ms">
+        <div class="group-header">
+          <span class="group-name">Notes</span>
+          <span class="group-count">${noteNotes.length}</span>
+        </div>
+        <div class="masonry">
+          ${noteNotes.map(note => renderNoteCard(note, cardIndex++, true)).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    const scheduledSectionsHtml = sortedGroups.map(([group, groupNotes]) => `
       <div class="group" style="animation-delay: ${cardIndex * 60}ms">
         <div class="group-header">
           <span class="group-name">${escapeHtml(group)}</span>
@@ -1283,6 +1328,8 @@
         </div>
       </div>
     `).join('');
+
+    board.innerHTML = notesSectionHtml + scheduledSectionsHtml;
 
     board.querySelectorAll('.note-card').forEach(card => {
       card.addEventListener('click', () => openEditModal(card.dataset.id));
@@ -1338,6 +1385,8 @@
     document.getElementById('noteOwner').readOnly = false;
     document.getElementById('noteGroup').readOnly = false;
     document.getElementById('noteWakeDate').readOnly = false;
+    document.getElementById('noteWakeDate').disabled = false;
+    document.getElementById('noteToggle').checked = false;
     document.getElementById('urgencyToggle').style.display = '';
     document.getElementById('tagChips').style.display = '';
     document.getElementById('tagSuggestions').style.display = '';
@@ -1380,6 +1429,7 @@
     const deleteBtn = document.getElementById('deleteBtn');
     if (deleteBtn) deleteBtn.style.display = 'none';
     noteForm.reset();
+    document.getElementById('noteWakeDate').disabled = false;
     setTags([]);
     openModal();
   }
@@ -1401,7 +1451,10 @@
       document.getElementById('noteDescription').value = note.description || '';
       document.getElementById('noteOwner').value = note.owner;
       document.getElementById('noteGroup').value = note.group_tag;
-      document.getElementById('noteWakeDate').value = note.wake_date;
+      const isNote = !note.wake_date;
+      document.getElementById('noteToggle').checked = isNote;
+      document.getElementById('noteWakeDate').disabled = isNote;
+      document.getElementById('noteWakeDate').value = note.wake_date || '';
       setUrgency(note.urgency);
       setTags(note.tags || []);
 
@@ -1477,7 +1530,10 @@
     document.getElementById('noteDescription').value = note.description || '';
     document.getElementById('noteOwner').value = note.owner;
     document.getElementById('noteGroup').value = note.group_tag;
-    document.getElementById('noteWakeDate').value = note.wake_date;
+    const isNote = !note.wake_date;
+    document.getElementById('noteToggle').checked = isNote;
+    document.getElementById('noteWakeDate').disabled = isNote;
+    document.getElementById('noteWakeDate').value = note.wake_date || '';
     setUrgency(note.urgency);
     setTags(note.tags || []);
 
@@ -1599,7 +1655,7 @@
       description: document.getElementById('noteDescription').value.trim() || null,
       owner: document.getElementById('noteOwner').value.trim(),
       group_tag: document.getElementById('noteGroup').value.trim(),
-      wake_date: document.getElementById('noteWakeDate').value,
+      wake_date: document.getElementById('noteToggle').checked ? null : (document.getElementById('noteWakeDate').value || null),
       urgency: document.getElementById('urgencyToggle').dataset.value,
       tags: currentTags
     };
@@ -1697,6 +1753,12 @@
 
   document.querySelectorAll('#urgencyToggle button').forEach(btn => {
     btn.addEventListener('click', () => setUrgency(btn.dataset.value));
+  });
+
+  document.getElementById('noteToggle').addEventListener('change', (e) => {
+    const wakeDateField = document.getElementById('noteWakeDate');
+    wakeDateField.disabled = e.target.checked;
+    if (e.target.checked) wakeDateField.value = '';
   });
 
   // ─── Keyboard shortcuts ──────────────────────

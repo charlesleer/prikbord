@@ -1,11 +1,11 @@
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
-from models import NoteCreate, NoteOut, NoteUpdate
+from models import ImportPayload, NoteCreate, NoteOut, NoteUpdate
 from database import (
     create_note,
     delete_note,
@@ -54,7 +54,7 @@ async def create(note: NoteCreate):
         description=note.description,
         owner=note.owner,
         group_tag=note.group_tag,
-        wake_date=note.wake_date.isoformat(),
+        wake_date=note.wake_date.isoformat() if note.wake_date else None,
         urgency=note.urgency.value,
         tags=note.tags,
     )
@@ -121,10 +121,7 @@ async def export_notes():
 
 
 @app.post("/api/import")
-async def import_notes_endpoint(data: Dict[str, Any]):
+async def import_notes_endpoint(data: ImportPayload):
     """Import notes from JSON. Returns count of imported notes."""
-    notes = data.get("notes", [])
-    if not isinstance(notes, list):
-        raise HTTPException(status_code=400, detail="notes must be a list")
-    result = await import_notes(notes)
+    result = await import_notes([n.model_dump() for n in data.notes])
     return result

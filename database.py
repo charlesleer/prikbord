@@ -7,6 +7,7 @@ from typing import List, Optional
 import aiosqlite
 
 DB_PATH = Path(__file__).parent / "prikbord.db"
+MAX_TAG_LENGTH = 50
 
 
 async def init_db() -> None:
@@ -18,7 +19,7 @@ async def init_db() -> None:
                 description TEXT,
                 owner TEXT NOT NULL,
                 group_tag TEXT NOT NULL,
-                wake_date TEXT NOT NULL,
+                wake_date TEXT,
                 urgency TEXT NOT NULL DEFAULT 'low',
                 tags TEXT NOT NULL DEFAULT '[]',
                 created_at TEXT NOT NULL,
@@ -53,7 +54,7 @@ async def create_note(
     description: Optional[str],
     owner: str,
     group_tag: str,
-    wake_date: str,
+    wake_date: Optional[str],
     urgency: str = "low",
     tags: Optional[List[str]] = None,
 ) -> dict:
@@ -182,6 +183,7 @@ async def import_notes(notes: List[dict]) -> dict:
             note_id = str(uuid.uuid4())
             tags = note.get("tags", [])
             if isinstance(tags, list):
+                tags = [str(t)[:MAX_TAG_LENGTH] for t in tags[:20]]  # cap 20 tags, 50 chars each
                 tags = json.dumps(tags)
             await db.execute(
                 """
