@@ -39,6 +39,22 @@
       --radius-lg: 14px;
     }
 
+    [data-theme="light"] {
+      --bg: #f4f4f0;
+      --surface: #ffffff;
+      --surface-hover: #efefec;
+      --surface-raised: #f9f9f7;
+      --border: #dcdcd6;
+      --border-subtle: #eaeae6;
+      --text: #1a1a1a;
+      --text-muted: #7070a0;
+      --text-dim: #a0a09a;
+      --accent: #0088cc;
+      --accent-hover: #0099dd;
+      --accent-dim: rgba(0, 136, 204, 0.1);
+      --accent-glow: rgba(0, 136, 204, 0.2);
+    }
+
     html {
       scroll-behavior: smooth;
     }
@@ -981,6 +997,148 @@
       to { opacity: 1; }
     }
 
+    /* ─── Board tabs ─────────────────────────── */
+    .board-tabs {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+
+    .board-tabs-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .board-tabs-inner::-webkit-scrollbar { display: none; }
+
+    .board-tab {
+      flex-shrink: 0;
+      padding: 0.75rem 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .board-tab:hover { color: var(--text); }
+
+    .board-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 500;
+    }
+
+    .board-tab .tab-actions {
+      display: inline-flex;
+      gap: 0.25rem;
+      margin-left: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .board-tab:hover .tab-actions { opacity: 1; }
+
+    .board-tab .tab-actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 0 2px;
+      font-size: 0.7rem;
+      line-height: 1;
+      border-radius: 3px;
+    }
+
+    .board-tab .tab-actions button:hover { color: var(--text); background: var(--surface-hover); }
+
+    .tab-add {
+      flex-shrink: 0;
+      padding: 0.75rem 0.9rem;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-add:hover { color: var(--accent); }
+
+    /* ─── Theme toggle ────────────────────────── */
+    .theme-toggle {
+      flex-shrink: 0;
+      margin-left: auto;
+      padding: 0.5rem;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 0.2s, border-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+    .theme-toggle svg { width: 15px; height: 15px; display: block; }
+
+    /* ─── Board context menu ──────────────────── */
+    .board-menu {
+      position: fixed;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 300;
+      min-width: 160px;
+      overflow: hidden;
+    }
+
+    .board-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .board-menu-item:hover { background: var(--surface-hover); }
+    .board-menu-item.danger { color: var(--red); }
+    .board-menu-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ─── Drag-drop ───────────────────────────── */
+    .note-card[draggable="true"] { cursor: grab; }
+    .note-card[draggable="true"]:active { cursor: grabbing; }
+    .note-card.drag-over {
+      outline: 2px dashed var(--accent);
+      outline-offset: 4px;
+      opacity: 0.7;
+    }
+    .note-card.dragging { opacity: 0.4; }
+
     /* ─── Reduced motion ──────────────────────── */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -992,6 +1150,15 @@
   </style>
 </head>
 <body>
+
+<div class="board-tabs" id="boardTabs">
+  <div class="board-tabs-inner">
+    <button class="tab-add" id="addBoardBtn" title="New board" aria-label="Create new board">+</button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle light/dark theme">
+      <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+  </div>
+</div>
 
 <header>
   <div class="header-inner">
@@ -1032,6 +1199,43 @@
 <button class="fab" id="fab" title="Add note (n)" aria-label="Add new note">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
 </button>
+
+<!-- Board management modal -->
+<div class="modal-overlay" id="boardModalOverlay" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-title" id="boardModalTitle">Manage Board</span>
+      </div>
+      <button class="modal-close" id="boardModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="boardNameInput">Board name</label>
+        <input class="form-input" id="boardNameInput" type="text" placeholder="e.g. Sprint 5, Team Alpha" maxlength="80" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="boardDeleteBtn" style="display:none;flex:0.4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+        Delete
+      </button>
+      <button class="btn btn-primary" id="boardSaveBtn" style="flex:1">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Board context menu -->
+<div class="board-menu" id="boardMenu" style="display:none">
+  <button class="board-menu-item" id="menuRename">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+    Rename
+  </button>
+  <button class="board-menu-item danger" id="menuDelete">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+    Delete board
+  </button>
+</div>
 
 <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
@@ -1120,6 +1324,16 @@
   let editingId = null;
   let currentTags = [];
   let toastTimer = null;
+
+  // ─── Boards ───────────────────────────────────
+  let boards = [];
+  let activeBoardId = localStorage.getItem('prikboard_active_board') || 'default';
+  let editingBoardId = null;  // board being renamed/deleted via modal
+  let dragSrcId = null;
+
+  // ─── Theme ────────────────────────────────────
+  const savedTheme = localStorage.getItem('prikboard_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
 
   // ─── DOM refs ────────────────────────────────
   const board = document.getElementById('board');
@@ -1213,7 +1427,7 @@
       : `<div><div class="note-date ${dateClass}">${daysLabel(prox)}</div></div>`;
 
     return `
-      <div class="note-card ${prox.state}" data-id="${note.id}" style="transform: rotate(${randomRotation()}deg); animation-delay: ${index * 40}ms">
+      <div class="note-card ${prox.state}${isNote ? ' draggable-note' : ''}" data-id="${note.id}"${isNote ? ' draggable="true"' : ''} style="transform: rotate(${randomRotation()}deg); animation-delay: ${index * 40}ms">
         <div class="urgency-dot ${note.urgency}"></div>
         <div class="note-title">${escapeHtml(note.title)}</div>
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
@@ -1333,6 +1547,16 @@
 
     board.querySelectorAll('.note-card').forEach(card => {
       card.addEventListener('click', () => openEditModal(card.dataset.id));
+    });
+
+    // Attach drag handlers to notes (free-floating)
+    board.querySelectorAll('.masonry .draggable-note').forEach(card => {
+      card.addEventListener('dragstart', (e) => handleDragStart(e, card.dataset.id));
+      card.addEventListener('dragend', handleDragEnd);
+      card.addEventListener('dragover', handleDragOver);
+      card.addEventListener('dragenter', handleDragEnter);
+      card.addEventListener('dragleave', handleDragLeave);
+      card.addEventListener('drop', (e) => handleDrop(e, card.dataset.id));
     });
   }
 
@@ -1573,11 +1797,15 @@
   }
 
   // ─── API ────────────────────────────────────
+  function boardParam() {
+    return `?board=${encodeURIComponent(activeBoardId)}`;
+  }
+
   async function fetchNotes() {
     try {
       const [activeRes, resolvedRes] = await Promise.all([
-        fetch('/api/notes'),
-        fetch('/api/notes/resolved')
+        fetch('/api/notes' + boardParam()),
+        fetch('/api/notes/resolved' + boardParam())
       ]);
       const active = await activeRes.json();
       const resolved = await resolvedRes.json();
@@ -1598,8 +1826,8 @@
   async function fetchGroupsAndTags() {
     try {
       const [groupsRes, tagsRes] = await Promise.all([
-        fetch('/api/groups'),
-        fetch('/api/tags')
+        fetch('/api/groups' + boardParam()),
+        fetch('/api/tags' + boardParam())
       ]);
       groups = await groupsRes.json();
       allTags = await tagsRes.json();
@@ -1670,7 +1898,7 @@
         if (!res.ok) throw new Error();
         showToast('Changes saved');
       } else {
-        const res = await fetch('/api/notes', {
+        const res = await fetch('/api/notes' + boardParam(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
@@ -1761,19 +1989,261 @@
     if (e.target.checked) wakeDateField.value = '';
   });
 
+  // ─── Board management ────────────────────────
+  async function fetchBoards() {
+    boards = await (await fetch('/api/boards')).json();
+    renderBoardTabs();
+  }
+
+  function renderBoardTabs() {
+    const inner = document.querySelector('.board-tabs-inner');
+    inner.querySelectorAll('.board-tab').forEach(t => t.remove());
+    const addBtn = document.getElementById('addBoardBtn');
+    const themeBtn = document.getElementById('themeToggle');
+    boards.forEach(b => {
+      const tab = document.createElement('button');
+      tab.className = 'board-tab' + (b.id === activeBoardId ? ' active' : '');
+      tab.dataset.id = b.id;
+      tab.innerHTML = `<span class="tab-name">${escapeHtml(b.name)}</span>${b.id !== 'default' ? '<span class="tab-actions"><button class="tab-rename" title="Rename">&#9998;</button></span>' : ''}`;
+      tab.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-rename')) {
+          e.stopPropagation();
+          openBoardModal(b);
+        } else {
+          switchBoard(b.id);
+        }
+      });
+      tab.addEventListener('contextmenu', (e) => {
+        if (b.id === 'default') return;
+        e.preventDefault();
+        openBoardMenu(e, b);
+      });
+      inner.insertBefore(tab, addBtn);
+    });
+    inner.appendChild(themeBtn);
+  }
+
+  async function switchBoard(id) {
+    if (id === activeBoardId) return;
+    activeBoardId = id;
+    localStorage.setItem('prikboard_active_board', id);
+    renderBoardTabs();
+    await fetchNotes();
+    await fetchGroupsAndTags();
+    closeModal();
+  }
+
+  async function createBoard(name) {
+    const res = await fetch('/api/boards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    if (!res.ok) { showToast('Failed to create board', false); return; }
+    const board = await res.json();
+    boards.push(board);
+    renderBoardTabs();
+    await switchBoard(board.id);
+    showToast('Board created');
+  }
+
+  async function renameBoard(id, name) {
+    const res = await fetch(`/api/boards/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    if (!res.ok) { showToast('Failed to rename board', false); return; }
+    const board = await res.json();
+    const idx = boards.findIndex(b => b.id === id);
+    if (idx !== -1) boards[idx] = board;
+    renderBoardTabs();
+    showToast('Board renamed');
+  }
+
+  async function deleteBoard(id) {
+    if (!confirm(`Delete "${boards.find(b => b.id === id)?.name}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/boards/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) { showToast('Cannot delete board', false); return; }
+    boards = boards.filter(b => b.id !== id);
+    if (activeBoardId === id) switchBoard('default');
+    else renderBoardTabs();
+    showToast('Board deleted');
+  }
+
+  // ─── Board modal ─────────────────────────────
+  const boardModalOverlay = document.getElementById('boardModalOverlay');
+  const boardModalTitle = document.getElementById('boardModalTitle');
+  const boardNameInput = document.getElementById('boardNameInput');
+  const boardDeleteBtn = document.getElementById('boardDeleteBtn');
+  const boardSaveBtn = document.getElementById('boardSaveBtn');
+
+  function openBoardModal(board) {
+    editingBoardId = board.id;
+    boardNameInput.value = board.name;
+    boardModalTitle.textContent = board.id === 'default' ? 'Board Settings' : 'Rename Board';
+    boardDeleteBtn.style.display = board.id === 'default' ? 'none' : '';
+    boardModalOverlay.classList.add('open');
+    boardNameInput.focus();
+    boardNameInput.select();
+  }
+
+  function closeBoardModal() {
+    boardModalOverlay.classList.remove('open');
+    editingBoardId = null;
+  }
+
+  boardSaveBtn.addEventListener('click', () => {
+    const name = boardNameInput.value.trim();
+    if (!name) return;
+    if (editingBoardId === null) {
+      createBoard(name);
+    } else {
+      renameBoard(editingBoardId, name);
+    }
+    closeBoardModal();
+  });
+
+  boardNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); boardSaveBtn.click(); }
+    if (e.key === 'Escape') closeBoardModal();
+  });
+
+  document.getElementById('boardModalClose').addEventListener('click', closeBoardModal);
+  boardModalOverlay.addEventListener('click', (e) => { if (e.target === boardModalOverlay) closeBoardModal(); });
+
+  boardDeleteBtn.addEventListener('click', () => {
+    if (editingBoardId) { deleteBoard(editingBoardId); closeBoardModal(); }
+  });
+
+  document.getElementById('addBoardBtn').addEventListener('click', () => {
+    editingBoardId = null;
+    boardNameInput.value = '';
+    boardModalTitle.textContent = 'New Board';
+    boardDeleteBtn.style.display = 'none';
+    boardModalOverlay.classList.add('open');
+    boardNameInput.focus();
+  });
+
+  // ─── Board context menu ──────────────────────
+  const boardMenu = document.getElementById('boardMenu');
+  let menuBoardId = null;
+
+  function openBoardMenu(e, board) {
+    menuBoardId = board.id;
+    boardMenu.style.display = 'block';
+    const rect = e.target.closest('.board-tab').getBoundingClientRect();
+    boardMenu.style.top = rect.bottom + window.scrollY + 4 + 'px';
+    boardMenu.style.left = rect.left + 'px';
+  }
+
+  function closeBoardMenu() {
+    boardMenu.style.display = 'none';
+    menuBoardId = null;
+  }
+
+  document.addEventListener('click', closeBoardMenu);
+
+  document.getElementById('menuRename').addEventListener('click', () => {
+    const b = boards.find(b => b.id === menuBoardId);
+    if (b) openBoardModal(b);
+    closeBoardMenu();
+  });
+
+  document.getElementById('menuDelete').addEventListener('click', () => {
+    if (menuBoardId) deleteBoard(menuBoardId);
+    closeBoardMenu();
+  });
+
+  // ─── Theme toggle ────────────────────────────
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('prikboard_theme', next);
+  });
+
+  // ─── Drag-drop for Notes ─────────────────────
+  function handleDragStart(e, noteId) {
+    dragSrcId = noteId;
+    e.dataTransfer.effectAllowed = 'move';
+    e.target.classList.add('dragging');
+  }
+
+  function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    document.querySelectorAll('.note-card.drag-over').forEach(c => c.classList.remove('drag-over'));
+    dragSrcId = null;
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleDragEnter(e) {
+    const card = e.target.closest('.note-card');
+    if (card && card.dataset.id !== dragSrcId) {
+      card.classList.add('drag-over');
+    }
+  }
+
+  function handleDragLeave(e) {
+    const card = e.target.closest('.note-card');
+    if (card) card.classList.remove('drag-over');
+  }
+
+  async function handleDrop(e, targetId) {
+    e.preventDefault();
+    document.querySelectorAll('.note-card.drag-over').forEach(c => c.classList.remove('drag-over'));
+    if (!dragSrcId || dragSrcId === targetId) return;
+
+    const noteNotes = notes.filter(n => !n.wake_date);
+    const srcIdx = noteNotes.findIndex(n => n.id === dragSrcId);
+    const tgtIdx = noteNotes.findIndex(n => n.id === targetId);
+    if (srcIdx === -1 || tgtIdx === -1) return;
+
+    const [moved] = noteNotes.splice(srcIdx, 1);
+    noteNotes.splice(tgtIdx, 0, moved);
+
+    const payload = noteNotes.map((n, i) => ({ id: n.id, note_order: i }));
+    await fetch('/api/notes/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    payload.forEach(item => {
+      const n = notes.find(n => n.id === item.id);
+      if (n) n.note_order = item.note_order;
+    });
+    render();
+  }
+
   // ─── Keyboard shortcuts ──────────────────────
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
       closeModal();
     }
-    if (e.key === 'n' && !modalOverlay.classList.contains('open') &&
+    if (e.key === 'Escape' && boardModalOverlay.classList.contains('open')) {
+      closeBoardModal();
+    }
+    if (e.key === 'n' && !modalOverlay.classList.contains('open') && !boardModalOverlay.classList.contains('open') &&
         e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
       e.preventDefault();
       openAddModal();
     }
+    if ((e.key === 'd' || e.key === 'D') && modalOverlay.classList.contains('open') && editingId) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        const toggle = document.getElementById('noteToggle');
+        toggle.checked = !toggle.checked;
+        toggle.dispatchEvent(new Event('change'));
+      }
+    }
   });
 
   // ─── Init ────────────────────────────────────
+  fetchBoards();
   fetchNotes();
   fetchGroupsAndTags();
 </script>

@@ -37,6 +37,8 @@ class NoteUpdate(BaseModel):
 
 class NoteOut(NoteBase):
     id: str
+    board_id: str
+    note_order: int
     created_at: datetime
     updated_at: datetime
     resolved: bool
@@ -58,3 +60,17 @@ class ImportNoteItem(BaseModel):
 
 class ImportPayload(BaseModel):
     notes: List[ImportNoteItem]
+
+
+class BoardCreate(BaseModel):
+    name: str = Field(..., max_length=80)
+
+
+class BoardOut(BaseModel):
+    id: str
+    name: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

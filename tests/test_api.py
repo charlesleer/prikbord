@@ -360,3 +360,116 @@ async def test_serve_index(client):
     assert res.status_code == 200
     assert "text/html" in res.headers.get("content-type", "")
     assert "Prikbord" in res.text
+
+
+@pytest.mark.asyncio
+async def test_boards_crud(client):
+    """Boards can be listed, created, renamed, and deleted."""
+    # List boards — default board exists
+    res = await client.get("/api/boards")
+    assert res.status_code == 200
+    boards = res.json()
+    assert len(boards) >= 1
+    assert any(b["id"] == "default" for b in boards)
+
+    # Create a board
+    res = await client.post("/api/boards", json={"name": "Sprint 5"})
+    assert res.status_code == 201
+    new_board = res.json()
+    assert new_board["name"] == "Sprint 5"
+    board_id = new_board["id"]
+
+    # List includes new board
+    res = await client.get("/api/boards")
+    boards = res.json()
+    assert len(boards) >= 2
+
+    # Rename board
+    res = await client.patch(f"/api/boards/{board_id}", json={"name": "Sprint 6"})
+    assert res.status_code == 200
+    assert res.json()["name"] == "Sprint 6"
+
+    # Delete board
+    res = await client.delete(f"/api/boards/{board_id}")
+    assert res.status_code == 204
+
+    # Cannot delete default board
+    res = await client.delete("/api/boards/default")
+    assert res.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_notes_scoped_to_board(client):
+    """Notes are scoped to the active board."""
+    # Create a note on default board
+    await client.post("/api/notes", json={
+        "title": "On default",
+        "owner": "Alice",
+        "group_tag": "Team",
+        "wake_date": (date.today() + timedelta(days=5)).isoformat(),
+        "urgency": "low",
+        "tags": []
+    })
+
+    # Create a new board
+    res = await client.post("/api/boards", json={"name": "Sprint X"})
+    board_id = res.json()["id"]
+
+    # Create a note on Sprint X board
+    await client.post(f"/api/notes?board={board_id}", json={
+        "title": "On Sprint X",
+        "owner": "Bob",
+        "group_tag": "Team",
+        "wake_date": (date.today() + timedelta(days=3)).isoformat(),
+        "urgency": "medium",
+        "tags": []
+    })
+
+    # Default board only has its own note
+    res = await client.get("/api/notes")
+    notes = res.json()
+    assert len(notes) == 1
+    assert notes[0]["title"] == "On default"
+
+    # Sprint X board only has its own note
+    res = await client.get(f"/api/notes?board={board_id}")
+    notes = res.json()
+    assert len(notes) == 1
+    assert notes[0]["title"] == "On Sprint X"
+
+
+@pytest.mark.asyncio
+async def test_reorder_notes(client):
+    """Batch update note_order via the reorder endpoint."""
+    # Create a free-floating note (no wake_date)
+    res = await client.post("/api/notes", json={
+        "title": "Note 1",
+        "owner": "Alice",
+        "group_tag": "Team",
+        "urgency": "low",
+        "tags": []
+    })
+    note1_id = res.json()["id"]
+
+    res = await client.post("/api/notes", json={
+        "title": "Note 2",
+        "owner": "Bob",
+        "group_tag": "Team",
+        "urgency": "low",
+        "tags": []
+    })
+    note2_id = res.json()["id"]
+
+    # Reorder: note2 before note1
+    res = await client.post("/api/notes/reorder", json=[
+        {"id": note2_id, "note_order": 0},
+        {"id": note1_id, "note_order": 1}
+    ])
+    assert res.status_code == 200
+
+    # Fetch and verify order
+    res = await client.get("/api/notes")
+    notes = res.json()
+    free_floating = [n for n in notes if n["wake_date"] is None]
+    assert free_floating[0]["id"] == note2_id
+    assert free_floating[1]["id"] == note1_id
