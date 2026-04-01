@@ -809,26 +809,25 @@
       cursor: pointer;
     }
 
-    /* Tag chips input */
-    .tag-input-container { position: relative; }
+    /* Tag selector */
+    .tag-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
 
-    .tag-chips {
+    .tag-selected-row {
       display: flex;
       flex-wrap: wrap;
       gap: 0.35rem;
-      padding: 0.55rem 0.65rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      min-height: 42px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      cursor: text;
+      min-height: 32px;
       align-items: center;
     }
 
-    .tag-chips:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-dim);
+    .tag-selected-empty {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
     }
 
     .tag-chip {
@@ -840,7 +839,7 @@
       border: 1px solid rgba(0, 212, 255, 0.2);
       font-family: var(--font-mono);
       font-size: 0.72rem;
-      padding: 0.15rem 0.4rem 0.15rem 0.5rem;
+      padding: 0.2rem 0.5rem 0.2rem 0.6rem;
       border-radius: 5px;
       animation: chip-pop 0.2s var(--ease-spring);
     }
@@ -866,40 +865,66 @@
 
     .tag-chip-remove:hover { opacity: 1; }
 
-    .tag-chip-input {
-      flex: 1;
-      min-width: 80px;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-family: var(--font-body);
-      font-size: 0.875rem;
-      outline: none;
-      padding: 0.1rem 0;
-    }
-
-    .tag-chip-input::placeholder { color: var(--text-dim); }
-
-    .tag-suggestions {
+    .tag-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-top: 0.5rem;
+      gap: 0.4rem;
     }
 
-    .tag-suggestion {
-      background: var(--surface-hover);
-      color: var(--text-muted);
+    .tag-box {
+      background: var(--bg);
       border: 1px solid var(--border);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
+      color: var(--text-muted);
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--radius-sm);
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.15s var(--ease-out);
+      user-select: none;
     }
 
-    .tag-suggestion:hover { background: var(--accent-dim); color: var(--accent); border-color: rgba(0, 212, 255, 0.3); }
+    .tag-box:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .tag-box.selected {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .tag-box.new-tag {
+      border-style: dashed;
+      color: var(--text-dim);
+    }
+
+    .tag-box.new-tag:hover {
+      color: var(--green);
+      border-color: rgba(168, 255, 62, 0.5);
+      background: rgba(168, 255, 62, 0.08);
+    }
+
+    .tag-new-input {
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      color: var(--text);
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      outline: none;
+      width: 110px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .tag-new-input::placeholder { color: var(--text-dim); }
+    .tag-new-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-dim);
+    }
 
     /* Modal footer */
     .modal-footer {
@@ -1324,11 +1349,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">Tags</label>
-          <div class="tag-input-container">
-            <div class="tag-chips" id="tagChips" role="group" aria-label="Tags">
-              <input class="tag-chip-input" id="tagInput" type="text" placeholder="Add tags — press Enter or comma" autocomplete="off" aria-label="Add a tag">
+          <div class="tag-selector" id="tagSelector">
+            <div class="tag-selected-row" id="tagSelectedRow">
+              <span class="tag-selected-empty" id="tagSelectedEmpty">None selected</span>
             </div>
-            <div class="tag-suggestions" id="tagSuggestions"></div>
+            <div class="tag-grid" id="tagGrid"></div>
           </div>
         </div>
       </div>
@@ -1383,9 +1408,6 @@
   const tagFilter = document.getElementById('tagFilter');
   const archiveToggle = document.getElementById('archiveToggle');
   const toast = document.getElementById('toast');
-  const tagChips = document.getElementById('tagChips');
-  const tagInput = document.getElementById('tagInput');
-  const tagSuggestions = document.getElementById('tagSuggestions');
 
   // ─── Proximity ────────────────────────────────
   function getProximity(wakeDate) {
@@ -1637,32 +1659,76 @@
   }
 
   // ─── Tags ────────────────────────────────────
+  const tagSelectedRow = document.getElementById('tagSelectedRow');
+  const tagGrid = document.getElementById('tagGrid');
+
   function setTags(tags) {
     currentTags = tags;
-    tagChips.querySelectorAll('.tag-chip').forEach(c => c.remove());
-    currentTags.forEach(tag => {
-      const chip = document.createElement('span');
-      chip.className = 'tag-chip';
-      chip.innerHTML = `${escapeHtml(tag)}<button type="button" class="tag-chip-remove" data-tag="${escapeHtml(tag)}" aria-label="Remove tag ${escapeHtml(tag)}">&times;</button>`;
-      tagChips.insertBefore(chip, tagInput);
+    renderTagSelected();
+    renderTagGrid();
+  }
+
+  function toggleTag(tag) {
+    if (currentTags.includes(tag)) {
+      currentTags = currentTags.filter(t => t !== tag);
+    } else {
+      currentTags = [...currentTags, tag];
+    }
+    renderTagSelected();
+    renderTagGrid();
+  }
+
+  function renderTagSelected() {
+    if (currentTags.length === 0) {
+      tagSelectedRow.innerHTML = '<span class="tag-selected-empty">None selected</span>';
+      return;
+    }
+    tagSelectedRow.innerHTML = currentTags.map(tag =>
+      `<span class="tag-chip">${escapeHtml(tag)}<button type="button" class="tag-chip-remove" data-tag="${escapeHtml(tag)}" aria-label="Remove tag ${escapeHtml(tag)}">&times;</button></span>`
+    ).join('');
+    tagSelectedRow.querySelectorAll('.tag-chip-remove').forEach(btn => {
+      btn.addEventListener('click', () => toggleTag(btn.dataset.tag));
     });
   }
 
-  function addTag(tag) {
-    tag = tag.trim().toLowerCase().replace(/,/g, '');
-    if (tag && !currentTags.includes(tag)) setTags([...currentTags, tag]);
-    tagInput.value = '';
-    renderTagSuggestions();
-  }
+  function renderTagGrid() {
+    const selectedSet = new Set(currentTags);
+    const selectableTags = allTags.filter(t => !selectedSet.has(t));
 
-  function removeTag(tag) { setTags(currentTags.filter(t => t !== tag)); }
-
-  function renderTagSuggestions() {
-    const query = tagInput.value.toLowerCase().trim();
-    const available = allTags.filter(t => !currentTags.includes(t) && (!query || t.toLowerCase().includes(query)));
-    tagSuggestions.innerHTML = available.slice(0, 8).map(t =>
-      `<button type="button" class="tag-suggestion" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+    let html = selectableTags.map(tag =>
+      `<button type="button" class="tag-box" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`
     ).join('');
+
+    if (html || allTags.length === 0) {
+      html += `<input class="tag-new-input" id="tagNewInput" type="text" placeholder="+ new tag" autocomplete="off" aria-label="Create new tag">`;
+    }
+
+    tagGrid.innerHTML = html;
+
+    tagGrid.querySelectorAll('.tag-box').forEach(box => {
+      box.addEventListener('click', () => toggleTag(box.dataset.tag));
+    });
+
+    const newInput = document.getElementById('tagNewInput');
+    if (newInput) {
+      newInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const val = newInput.value.trim().toLowerCase().replace(/,/g, '');
+          if (val && !allTags.includes(val)) {
+            allTags.push(val);
+          }
+          if (val) toggleTag(val);
+          newInput.value = '';
+        }
+      });
+      newInput.addEventListener('focus', () => {
+        newInput.placeholder = 'type & Enter';
+      });
+      newInput.addEventListener('blur', () => {
+        newInput.placeholder = '+ new tag';
+      });
+    }
   }
 
   // ─── Modal ───────────────────────────────────
@@ -1688,8 +1754,7 @@
     document.getElementById('noteWakeDate').disabled = false;
     document.getElementById('noteToggle').checked = false;
     document.getElementById('urgencyToggle').style.display = '';
-    document.getElementById('tagChips').style.display = '';
-    document.getElementById('tagSuggestions').style.display = '';
+    document.getElementById('tagSelector').style.display = '';
     submitBtn.style.display = '';
 
     const resolveBtn = document.getElementById('resolveBtn');
@@ -1719,8 +1784,7 @@
     document.getElementById('noteGroup').readOnly = false;
     document.getElementById('noteWakeDate').readOnly = false;
     document.getElementById('urgencyToggle').style.display = '';
-    document.getElementById('tagChips').style.display = '';
-    document.getElementById('tagSuggestions').style.display = '';
+    document.getElementById('tagSelector').style.display = '';
 
     const resolveBtn = document.getElementById('resolveBtn');
     if (resolveBtn) resolveBtn.remove();
@@ -1765,8 +1829,7 @@
       document.getElementById('noteGroup').readOnly = true;
       document.getElementById('noteWakeDate').readOnly = true;
       document.getElementById('urgencyToggle').style.display = 'none';
-      document.getElementById('tagChips').style.display = 'none';
-      document.getElementById('tagSuggestions').style.display = 'none';
+      document.getElementById('tagSelector').style.display = 'none';
 
       submitBtn.style.display = 'none';
 
@@ -1819,8 +1882,7 @@
     document.getElementById('noteGroup').readOnly = false;
     document.getElementById('noteWakeDate').readOnly = false;
     document.getElementById('urgencyToggle').style.display = '';
-    document.getElementById('tagChips').style.display = '';
-    document.getElementById('tagSuggestions').style.display = '';
+    document.getElementById('tagSelector').style.display = '';
 
     modalTitle.textContent = 'Edit Note';
     modalIcon.innerHTML = editIcon;
@@ -1912,8 +1974,6 @@
       document.getElementById('groupList').innerHTML = groups.map(g => `<option value="${escapeHtml(g)}">`).join('');
 
       tagFilter.innerHTML = '<option value="">All tags</option>' + allTags.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-
-      renderTagSuggestions();
     } catch { /* silent */ }
   }
 
@@ -1995,28 +2055,6 @@
     } catch {
       showToast('Something went wrong', false);
     }
-  });
-
-  // ─── Tag input events ─────────────────────────
-  tagInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const val = tagInput.value.replace(',', '').trim();
-      if (val) addTag(val);
-    } else if (e.key === 'Backspace' && !tagInput.value && currentTags.length > 0) {
-      removeTag(currentTags[currentTags.length - 1]);
-    }
-  });
-
-  tagInput.addEventListener('input', renderTagSuggestions);
-
-  tagChips.addEventListener('click', (e) => {
-    if (e.target.classList.contains('tag-chip-remove')) removeTag(e.target.dataset.tag);
-    else tagInput.focus();
-  });
-
-  tagSuggestions.addEventListener('click', (e) => {
-    if (e.target.classList.contains('tag-suggestion')) addTag(e.target.dataset.tag);
   });
 
   // ─── Filter events ───────────────────────────
