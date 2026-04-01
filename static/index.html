@@ -1345,6 +1345,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script>
   // ─── State ───────────────────────────────────
   let notes = [];
@@ -1921,6 +1922,13 @@
     await fetchNotes();
     await fetchGroupsAndTags();
     showToast('Note resolved');
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#00d4ff', '#a8ff3e', '#f5a623', '#ff4757'],
+      disableForReducedMotion: true
+    });
   }
 
   async function unresolveNote(id) {
